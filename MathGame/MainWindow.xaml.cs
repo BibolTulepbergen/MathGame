@@ -6,13 +6,35 @@ using System.Windows.Controls;
 
 namespace MathGame
 {
+    using System.Windows.Threading;
     public partial class MainWindow : Window
     {
+        DispatcherTimer timer = new DispatcherTimer();
+        int tenthsOfSecondsElapsed;
+        int matchesFound;
         public MainWindow()
         {
             InitializeComponent();
+
+            timer.Interval = TimeSpan.FromSeconds(.1);
+            timer.Tick += Timer_Tick;
             SetUpGame();
+            timer.Start();
+            tenthsOfSecondsElapsed = 0;
+            matchesFound = 0;
         }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            tenthsOfSecondsElapsed++;
+            timeTextBlock.Text = (tenthsOfSecondsElapsed / 10F).ToString("0.0s");
+            if (matchesFound == 8)
+            {
+                timer.Stop();
+                timeTextBlock.Text = timeTextBlock.Text + " - Play again?";
+            }
+        }
+
 
         private void SetUpGame()
         {
@@ -27,10 +49,14 @@ namespace MathGame
             // Обходим все TextBlock в Grid
             foreach (TextBlock textBlock in MainGrid.Children.OfType<TextBlock>())
             {
-                int index = random.Next(animalEmoji.Count);
-                string nextEmoji = animalEmoji[index];
-                textBlock.Text = nextEmoji;
-                animalEmoji.RemoveAt(index);
+                if (textBlock.Name != "timeTextBlock")
+                {
+                    textBlock.Visibility = Visibility.Visible;
+                    int index = random.Next(animalEmoji.Count);
+                    string nextEmoji = animalEmoji[index];
+                    textBlock.Text = nextEmoji;
+                    animalEmoji.RemoveAt(index);
+                }
             }
         }
 
@@ -47,6 +73,7 @@ namespace MathGame
             }
             else if (textBlock.Text == lastTextBlockClicked.Text)
             {
+                matchesFound++;
                 textBlock.Visibility = Visibility.Hidden;
                 findingMatch = false;
             }
@@ -56,6 +83,13 @@ namespace MathGame
                 findingMatch = false;
             }
         }
+
+        private void TimeTextBlock_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (matchesFound == 8)
+            {
+                SetUpGame();
+            }
+        }
     }
 }
-
